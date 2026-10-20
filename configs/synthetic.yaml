@@ -1,0 +1,7 @@
+extends: base.yaml
+experiment_name: cos_poly
+data:
+  source: synthetic
+  forecast_horizon: 30
+sampling:
+  length_mode: fixed_slots

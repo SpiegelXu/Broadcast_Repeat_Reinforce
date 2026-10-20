@@ -1,0 +1,11 @@
+extends: base.yaml
+experiment_name: base_analysis
+analysis:
+  steps: null
+  output_logit_lens: true
+  save_logits: true
+  capture_qkv: true
+  attention_statistics: false
+  ca_g: true
+  hidden_state_analysis: false
+  hidden_state_rank: false

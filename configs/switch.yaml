@@ -1,0 +1,7 @@
+extends: analysis.yaml
+experiment_name: token_queue_switch
+sampling:
+  # [SAMPLER] 重复时沿 confidence 排序重路由，并避开同 slot 位置。
+  sampler: MDLMswitchLensSampler
+  one_step_per_mask: true
+

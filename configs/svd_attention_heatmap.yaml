@@ -1,0 +1,18 @@
+extends: svd_quarter.yaml
+experiment_name: svd_attention_heatmap
+svd:
+  record_matrices: true
+  record_steps: [0]
+analysis:
+  # [HEATMAP] 输出 hook 内实际 SVD 干预前/后；普通版使用 attention_heatmap.yaml。
+  save_trajectory: false
+  attention_heatmap:
+    enabled: true
+    source: svd
+    steps: [0]
+    layers: [0]
+    layer_parity: all
+    layer_stride: 1
+    heads: null                       # SVD 下 null=本层实际被 top-rank 选中的 heads
+    head_parity: all
+    head_stride: 1

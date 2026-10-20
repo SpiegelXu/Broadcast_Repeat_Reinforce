@@ -1,0 +1,171 @@
+# 默认值保留上传代码的实际主线设置。实验只改配置，不改 Python。
+experiment_name: base
+# [CFG] null=不固定随机种子；复现实验可写 [77]，多 seed 可写 [11, 22, 33]。
+seeds: null
+
+model:
+  local_path: GSAI-ML/LLaDA-8B-Instruct   # 可换成本地权重目录
+  revision: 08b83a6feb34df1a6011b80c3c00c7563e963b07
+  torch_dtype: bfloat16
+  device_map: auto
+  context_length: 8192
+  local_files_only: false
+
+data:
+  source: monash
+  data_dir: datasets/monash
+  datasets_to_run: ["traffic_weekly"]
+  series_indices: null       # shuffle 后的索引；null 表示全部
+  shuffle_seed: 0
+  max_history_len: 500
+  # [DATA] null=使用 test 自身完整长度；如写 0.1，才启用 train 长度 1/10 上限。
+  max_forecast_ratio: null
+  forecast_horizon: null             # 可选额外上限；调试时例如设为 10
+  synthetic:
+    total_points: 150
+    history_len: 100
+    degree: 3
+    coeffs: null
+    normalize_x: true
+    x_range: [0, 150]
+    noise: 0.0
+    seed: 0
+
+
+
+#【    "weather", "covid_deaths", "solar_weekly", "tourism_monthly", "australian_electricity_demand", "pedestrian_counts",
+#    "traffic_hourly", "hospital", "fred_md", "tourism_yearly", "tourism_quarterly", "us_births",
+#    "nn5_weekly", "traffic_weekly", "saugeenday", "cif_2016"]
+
+
+forecast:
+  num_samples: 5
+  batch_size: 1
+  aggregation: mean    # 原 multi_sample；可选 median / mean                            # energy 从高到低排列后的零基索引
+  K: 0
+  temp: 1.0
+  alpha: 1.0                         # 原 get_scaler 内部实际覆盖成 1.0
+  beta: 0.3
+  basic: false
+  strict_handling: false
+  settings:
+    base: 10
+    prec: 3
+    time_sep: ','
+    bit_sep: ''
+    plus_sign: ''
+    minus_sign: '-'
+    signed: true
+
+sampling:
+  sampler: MDLMLensSampler           # 也可用 MDLMSampler；诊断独立控制
+  diffusion_steps: 32
+  block_size: 128
+  max_new_tokens: null               # 非 null 时优先于 length_mode
+  length_mode: legacy_average        # 原公式；fixed_slots 则精确分配 horizon * 4
+  digits_per_value: 3
+  prefill_commas: true
+  remasking: low_confidence
+  stochastic_transfer: false
+  # [SAMPLER] truncate/switch 的“连续 step”实验应设为 true；baseline 保持 false。
+  one_step_per_mask: false
+  token_queue:
+    repeat_window: 3
+    avoid_same_slot_on_reroute: true
+    use_second_choice_on_reroute: true
+    save_trace: true
+  right_shift_logits: false
+  begin_suppress_tokens: []
+  prompt_text: 'Analyze the sequence trend and predict the next 30 values Avoid repetition.'
+  # 支持 {steps} 占位符；修改 prompt 会改变 prompt_token_overlap 的保留集合。
+  cfg_scale: 0.0
+  cfg_keep_policy: prompt_token_overlap
+  cfg_keep_tokens: []                # explicit_token_ids 模式使用此列表
+  cfg_mask_scope: initial_known      # 保留旧行为：也包含预填逗号；history 只 mask 输入部分
+
+svd:
+  enabled: false
+  layers: [22, 23, 24]                      # null=每层；[0, 1, 2]=仅前三层
+  rank_mode: fraction
+  rank: 8
+  rank_fraction: 0.25                # 对 numerical orig_rank 取 1/4
+  rank_threshold: 0.00001
+  top_k_select: 8
+  selection_scope: per_sample        # batch_flat 对应原跨 batch 的 top-k
+  branches: full                    # CFG 时只干预 full；both 同时干预 sparse
+  record_stats: true
+  record_matrices: false
+  record_steps: [0]
+
+analysis:
+  steps: null                       # 全局实际 forward 序号，不是请求的步数
+  layers: null                      # QKV / attention 分析的层
+  branches: [full]                   # 可选 [full, sparse]
+  output_logit_lens: false
+  save_logits: false
+  save_trajectory: true
+  save_unmasked_positions: true
+  save_histories: false
+  save_hidden_states: false
+  hidden_state_analysis: false
+  hidden_state_rank: false
+  capture_qkv: false
+  save_qkv: false
+  attention_statistics: false
+  beta_S_fisher_split: false
+  ca_g: false
+  ca_g_mode: dynamic                 # dynamic / fixed_source
+  anchor:
+    window_size: null                # ceil(sqrt(sequence_length))
+    q_threshold: 0.30                # 保留原 Q30>0 插值判定，对应约70% query持续高亮
+    tail_fraction: 0.25
+    tail_margin: 0.05
+    min_anchors: 4
+    exclude_mask_keys: false         # 默认和原 CA_G_computation(scopes=None) 一致
+  # [LOOKAHEAD] 只使用每次 forward 的 token/confidence，不会打开 hidden state 或 QKV。
+  lookahead:
+    enabled: false
+    save_raw: true
+    save_metrics: true
+    save_panel: true
+    sample_ids: [0]                  # null=每个 sample 都画
+    panel_steps: null                # 例如 [0, 3, 5, 23]；null 时自动抽步
+    early_steps: 5
+    late_stride: 3
+    max_panels: 4
+    dpi: 200
+  # [ANALYSIS] 复用旧 canvas_utils 的 H/T/O agreement 与 scheduler persistence。
+  slot_convergence:
+    enabled: false
+    save_plot: true
+    sample_ids: [0]                  # null=每个 sample 都画
+    dpi: 200
+  # [HEATMAP] 建议通过 configs/attention_heatmap*.yaml 单独启用。
+  attention_heatmap:
+    enabled: false
+    source: qk                       # qk / svd / both
+    steps: [0]
+    layers: null
+    layer_parity: all                # all / odd / even（按零基 layer id）
+    layer_stride: 1
+    heads: null
+    head_parity: all                 # all / odd / even（按零基 head id）
+    head_stride: 1
+    branches: [full]
+    sample_ids: [0]                  # null=为每个 sample 保存 heatmap
+    query_scope: all                 # all / history / forecast / masked / unmasked
+    key_scope: all
+    cmap: viridis
+    norm: power                      # linear / power / log
+    gamma: 0.5
+    vmin: null                        # null=按当前矩阵自动缩放
+    vmax: null
+    figsize: [7.0, 6.0]
+    dpi: 180
+
+output:
+  output_dir: runs
+  save_samples: true
+  save_completions: true
+  save_pickle: false
+  save_plots: true

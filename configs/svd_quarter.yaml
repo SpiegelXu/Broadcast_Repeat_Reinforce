@@ -1,0 +1,13 @@
+extends: analysis.yaml
+experiment_name: svd_quarter
+svd:
+  enabled: true
+  rank_mode: fraction
+  rank_fraction: 0.25
+
+analysis:
+  save_trajectory: false
+  slot_convergence:
+    enabled: false
+    save_plot: false
+

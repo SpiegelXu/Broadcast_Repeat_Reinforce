@@ -1,0 +1,11 @@
+extends: base.yaml
+experiment_name: lookahead_draft
+analysis:
+  # [LOOKAHEAD] 不打开 hidden-state/QKV；只保存 draft、指标和 panel。
+  save_trajectory: false
+  lookahead:
+    enabled: true
+    save_raw: true
+    save_metrics: true
+    save_panel: true
+

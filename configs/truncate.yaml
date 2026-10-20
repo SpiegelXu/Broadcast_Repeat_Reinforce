@@ -1,0 +1,7 @@
+extends: analysis.yaml
+experiment_name: token_queue_truncate
+sampling:
+  # [SAMPLER] 连续三步拟提交同一 token 时，在同一位置改用 Top-2。
+  sampler: MDLMtruncateLensSampler
+  one_step_per_mask: true
+

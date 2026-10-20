@@ -1,0 +1,16 @@
+extends: base.yaml
+experiment_name: attention_heatmap
+analysis:
+  # [HEATMAP] 只捕获所需 Q/K，不打开 hidden-state 分析。
+  save_trajectory: false
+  attention_heatmap:
+    enabled: true
+    source: qk
+    steps: [0]
+    layers: null
+    layer_parity: even
+    layer_stride: 1
+    heads: [0]
+    head_parity: all
+    head_stride: 1
+

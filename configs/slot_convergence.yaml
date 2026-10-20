@@ -1,0 +1,9 @@
+extends: base.yaml
+experiment_name: slot_convergence
+analysis:
+  # [ANALYSIS] H/T/O agreement 与 scheduler persistence 均来自 token draft。
+  save_trajectory: false
+  slot_convergence:
+    enabled: true
+    save_plot: true
+

@@ -1,0 +1,6 @@
+extends: base.yaml
+experiment_name: svd_rank8
+svd:
+  enabled: true
+  rank_mode: fixed
+  rank: 8
